@@ -1,0 +1,2 @@
+add_executable(RigBuilderTycoon main.cpp)
+target_link_libraries(RigBuilderTycoon PRIVATE raylib)
