@@ -1,17 +1,26 @@
 #include "raylib.h"
 #include <iostream>
+#include <fstream>
+#include <string>
+
+#include "SaveSystemPlus.h" //Ali's Save System
+#include "Array.h" //Ali's Custom Array
+#include "CPU.h" //Zain's Hardware
+#include "GPU.h" //Zain's Hardware
+#include "RAM.h" //Zain's Hardware
+#include "PC.h" //Zain's Assembly Logic
+
 using namespace std;
-/* --- RAYLIB SYNTAX FROM WEBSITE ---
+/* ~~~ RAYLIB SYNTAX FROM WEBSITE ~~~
 
 WINDOW & SETUP:
-WindowShouldClose()                                   // Returns true if player clicks the X or hits ESC
-CloseWindow()                                         // Safely closes the window and frees memory
+WindowShouldClose()                   // Returns true if player clicks the X or hits ESC
+CloseWindow()                         // Safely closes the window and frees memory
 
 IMAGES & ICONS:
-LoadImage(const char *fileName)                       // Loads an image file from your folder into RAM
-SetWindowIcon(Image image)                            // Sets the icon in the top-left of the window
-UnloadImage(Image image)                              // Deletes the image from RAM to save memory
-
+LoadImage(const char *fileName)       // Loads an image file from your folder into RAM
+SetWindowIcon(Image image)            // Sets the icon in the top-left of the window
+UnloadImage(Image image)              // Deletes the image from RAM to save memory
 
 SHAPES & TEXT:
 DrawText(const char *text, int posX, int posY, int fontSize, Color color)
@@ -37,6 +46,10 @@ int main(){
     //Initialize the window
     SetConfigFlags(FLAG_WINDOW_TRANSPARENT); //Make the window background transparent.
     InitWindow(1280,720,"Rig-Builder Tycoon 🛠️");
+
+    InitAudioDevice(); // Starts the audio engine
+    Music bgm = LoadMusicStream("bgmusic.mp3");
+    PlayMusicStream(bgm);
     
     Image icon = LoadImage("icon.ico"); 
     if (icon.data != NULL) SetWindowIcon(icon); 
@@ -53,11 +66,28 @@ int main(){
     Color borderColor = {80,80,80,255}; //Clean border -offgrey
     Color textLight = {240,240,240,255}; //Off-white for main headers
     Color moneyGreen = {70,200,100,255}; //Bright green for MONEY!!!
+    Color bsodBlue = {0, 120, 215, 255}; //Classic Windows 10 BSOD Blue
 
     //Initilize Variables
     int shopFunds=0;
     int highScore=0;
+
+    SaveSystemPlus saveManager; //Alis file
+    saveManager.loadGame(shopFunds,highScore); //Alis func
     
+    //ZAIN'S HARDWARE SETUP (Using Ali's Array with Pointers)
+    Array<CPU*> shopCPUs;
+    shopCPUs.add(new CPU("Intel Core i5",180,40));
+    shopCPUs.add(new CPU("AMD Ryzen 7",300,65));
+
+    Array<GPU*> shopGPUs;
+    shopGPUs.add(new GPU("Nvidia GTX 1650",150,30));
+    shopGPUs.add(new GPU("Nvidia RTX 3060",350,75));
+
+    Array<RAM*> shopRAMs;
+    shopRAMs.add(new RAM("8GB DDR4",40,15));
+    shopRAMs.add(new RAM("16GB DDR5",90,35));
+
     bool customerWaiting=false;
     int currentBudget=0;
     int targetScore=0;
@@ -65,9 +95,9 @@ int main(){
     int currentMenu = 0; //0=Main Categories, 1=CPUs, 2=GPUs, 3=RAM
 
     //CURRENT BUILD VARIABLES
-    const char* selectedCPU = "None";
-    const char* selectedGPU = "None";
-    const char* selectedRAM = "None";
+    int selCPU_Idx = -1;
+    int selGPU_Idx = -1;
+    int selRAM_Idx = -1;
     int currentCost=0;
 
     //BUTTON HITBOXES
@@ -81,7 +111,19 @@ int main(){
     Rectangle btnItem1 = {460,200,330,50};
     Rectangle btnItem2 = {460,290,330,50};
 
+    //ANIMATION & BSOD VARIABLES
+    float popupTimer = 0.0f;
+    string popupText = "";
+    Color popupColor = WHITE;
+    
+    bool isBSOD = false;
+    float bsodTimer = 0.0f;
+    int lastAchievedScore = 0;
+    int lastTargetScore = 0;
+    int lastCostLost = 0;
+
     while (!WindowShouldClose()){
+        UpdateMusicStream(bgm);
         Vector2 mousePos=GetMousePosition();
 
         //Generate customer if queue is empty
@@ -97,46 +139,119 @@ int main(){
         Color colorRAM = MAROON;
         Color colorBench = ORANGE;
 
-        //Hover & Click Detection with Menu Logic
-        if (currentMenu == 0){
-            if (CheckCollisionPointRec(mousePos,btnCPU)){
-                colorCPU = SKYBLUE; 
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=1; 
-            }
-            if (CheckCollisionPointRec(mousePos,btnGPU)){
-                colorGPU = GREEN; 
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=2; 
-            }
-            if (CheckCollisionPointRec(mousePos,btnRAM)){
-                colorRAM = RED; 
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=3; 
-            }
-        }
-        else{
-            if (CheckCollisionPointRec(mousePos,btnBack)){
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=0; 
-            }
-            //Item Clicks
-            if (CheckCollisionPointRec(mousePos,btnItem1)){
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                    if (currentMenu==1) { selectedCPU="Intel core i5"; currentCost+=180; }
-                    if (currentMenu==2) { selectedGPU="Nvidia GTX 1650"; currentCost+=150; }
-                    if (currentMenu==3) { selectedRAM="8GB DDR4"; currentCost+=40; }
+        //Hover & Click Detection with Menu Logic (Only works if NOT in BSOD mode)
+        if (!isBSOD) {
+            if (currentMenu == 0){
+                if (CheckCollisionPointRec(mousePos,btnCPU)){
+                    colorCPU = SKYBLUE; 
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=1; 
+                }
+                if (CheckCollisionPointRec(mousePos,btnGPU)){
+                    colorGPU = GREEN; 
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=2; 
+                }
+                if (CheckCollisionPointRec(mousePos,btnRAM)){
+                    colorRAM = RED; 
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=3; 
                 }
             }
-            if (CheckCollisionPointRec(mousePos,btnItem2)){
+            else{
+                if (CheckCollisionPointRec(mousePos,btnBack)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=0; 
+                }
+                if (CheckCollisionPointRec(mousePos,btnItem1)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (currentMenu==1) selCPU_Idx=0;
+                        if (currentMenu==2) selGPU_Idx=0;
+                        if (currentMenu==3) selRAM_Idx=0;
+                    }
+                }
+                if (CheckCollisionPointRec(mousePos,btnItem2)){
+                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                        if (currentMenu==1) selCPU_Idx=1;
+                        if (currentMenu==2) selGPU_Idx=1;
+                        if (currentMenu==3) selRAM_Idx=1;
+                    }
+                }
+            }
+            
+            //COST CALCULATION
+            currentCost = 0;
+            if (selCPU_Idx != -1) currentCost += shopCPUs.get(selCPU_Idx)->getPrice();
+            if (selGPU_Idx != -1) currentCost += shopGPUs.get(selGPU_Idx)->getPrice();
+            if (selRAM_Idx != -1) currentCost += shopRAMs.get(selRAM_Idx)->getPrice();
+
+            //BENCHMARK ENGINE (Zain's OOP Logic)
+            if (CheckCollisionPointRec(mousePos,btnBench)){
+                colorBench = GOLD;
                 if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                    if (currentMenu==1) { selectedCPU="AMD Ryzen 7"; currentCost+=300; }
-                    if (currentMenu==2) { selectedGPU="Nvidia RTX 3060"; currentCost+=350; }
-                    if (currentMenu==3) { selectedRAM="16GB DDR5"; currentCost+=90; }
+                    if (selCPU_Idx != -1 && selGPU_Idx != -1 && selRAM_Idx != -1){
+                    
+                        CPU* rigCPU = new CPU(*shopCPUs.get(selCPU_Idx));
+                        GPU* rigGPU = new GPU(*shopGPUs.get(selGPU_Idx));
+                        RAM* rigRAM = new RAM(*shopRAMs.get(selRAM_Idx));
+                        
+                        PC currentRig;
+                        currentRig.addPart(rigCPU);
+                        currentRig.addPart(rigGPU);
+                        currentRig.addPart(rigRAM);
+                        
+                        int basePerf = currentRig.calculateTotalPerformance();
+                        
+                        //THE SNAKE OVERCLOCK
+                        system("start /wait Snake_Renewed.exe"); 
+                        
+                        int applesEaten=0;
+                        ifstream snakeFile("snake_bonus.txt");
+                        if (snakeFile.is_open()){
+                            snakeFile>>applesEaten;
+                            snakeFile.close();
+                        }
+                        
+                        int totalPerf = basePerf+(applesEaten/2);
+                        
+                        //Save stats for BSOD/Popup before resetting customer
+                        lastAchievedScore = totalPerf;
+                        lastTargetScore = targetScore;
+                        lastCostLost = currentCost;
+
+                        //Win Condition Check
+                        if (totalPerf >= targetScore && currentCost <= currentBudget){
+                            int profit = currentBudget - currentCost + 500;
+                            shopFunds += profit;
+                            if (totalPerf > highScore) highScore = totalPerf;
+                            
+                            saveManager.addScore(totalPerf); 
+                            
+                            customerWaiting = false;
+                            selCPU_Idx = -1; selGPU_Idx = -1; selRAM_Idx = -1;
+                            
+                            //SUCCESS ANIMATION
+                            popupText = "+$" + to_string(profit) + " (Score: " + to_string(totalPerf) + ")";
+                            popupColor = GREEN;
+                            popupTimer = 3.0f;
+                        }
+                        else{
+                            //BSOD!
+                            shopFunds -= currentCost; //You lose money spent on parts
+                            saveManager.saveGame(shopFunds, highScore); //Save the new money
+                            
+                            customerWaiting=false; //Angry customer leaves
+                            selCPU_Idx = -1; selGPU_Idx = -1; selRAM_Idx = -1;
+                            
+                            isBSOD = true; //Trigger the blue screen
+                            bsodTimer = 4.0f; //Lock the screen for 4 seconds
+                        }
+                        
+                    }else cout<<"[WARNING] Select all 3 parts before benchmarking!\n";
                 }
             }
         }
-        
-        if (CheckCollisionPointRec(mousePos,btnBench)){
-            colorBench = GOLD;
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) cout<<"BENCHMARK TRIGGERED!\n";
-        }
+
+        //Setup display strings safely
+        string displayCPU = (selCPU_Idx != -1) ? shopCPUs.get(selCPU_Idx)->getName() : "None";
+        string displayGPU = (selGPU_Idx != -1) ? shopGPUs.get(selGPU_Idx)->getName() : "None";
+        string displayRAM = (selRAM_Idx != -1) ? shopRAMs.get(selRAM_Idx)->getName() : "None";
 
         BeginDrawing();
         ClearBackground(bgDark);
@@ -145,13 +260,12 @@ int main(){
         DrawRectangleRounded({50,60,350,600},0.05f,10,panelColor);
         DrawRectangleRoundedLines({50,60,350,600},0.05f,10,3,borderColor);
         
-        DrawTextEx(mainFont,"Customer Queue",{56,80},24,1,textLight);
+        DrawTextEx(mainFont,"Customer Queue",{57,80},24,1,textLight);
       
         if (customerWaiting){
             DrawTextEx(mainFont,"A customer wants a rig!",{55,160},16,1,LIGHTGRAY);
-
-            DrawTextEx(mainFont,TextFormat("Budget: $%i",currentBudget),{60,240},24,1,moneyGreen);
-            DrawTextEx(mainFont,TextFormat("Target Score: %i",targetScore),{60,320},24,1,ORANGE);
+            DrawTextEx(mainFont,TextFormat("Budget: $%i",currentBudget),{60,240},22,1,moneyGreen);
+            DrawTextEx(mainFont,TextFormat("Target Score: %i",targetScore),{60,320},22,1,ORANGE);
         }
         else{
             DrawTextEx(mainFont,"Waiting for customer...",{55,160},16,1,LIGHTGRAY);
@@ -182,20 +296,20 @@ int main(){
             DrawRectangleRounded(btnItem2,0.1f,10,DARKGRAY);
             
             if (currentMenu == 1){
-                DrawTextEx(mainFont,"Intel i5 - $180",{490,218},16,1,WHITE);
-                DrawTextEx(mainFont,"AMD Ryzen 7 - $300",{490,308},16,1,WHITE);
+                DrawTextEx(mainFont,TextFormat("%s - $%i",shopCPUs.get(0)->getName().c_str(),shopCPUs.get(0)->getPrice()),{490,218},15,1,WHITE);
+                DrawTextEx(mainFont,TextFormat("%s - $%i",shopCPUs.get(1)->getName().c_str(),shopCPUs.get(1)->getPrice()),{490,308},15,1,WHITE);
             }
             if (currentMenu == 2){
-                DrawTextEx(mainFont,"GTX 1650 - $150",{490,218},16,1,WHITE);
-                DrawTextEx(mainFont,"RTX 3060 - $350",{490,308},16,1,WHITE);
+                DrawTextEx(mainFont,TextFormat("%s - $%i",shopGPUs.get(0)->getName().c_str(),shopGPUs.get(0)->getPrice()),{490,218},15,1,WHITE);
+                DrawTextEx(mainFont,TextFormat("%s - $%i",shopGPUs.get(1)->getName().c_str(),shopGPUs.get(1)->getPrice()),{490,308},15,1,WHITE);
             }
             if (currentMenu == 3){
-                DrawTextEx(mainFont,"8GB DDR4 - $40",{490,218},16,1,WHITE);
-                DrawTextEx(mainFont,"16GB DDR5 - $90",{490,308},16,1,WHITE);
+                DrawTextEx(mainFont,TextFormat("%s - $%i",shopRAMs.get(0)->getName().c_str(),shopRAMs.get(0)->getPrice()),{490,218},15,1,WHITE);
+                DrawTextEx(mainFont,TextFormat("%s - $%i",shopRAMs.get(1)->getName().c_str(),shopRAMs.get(1)->getPrice()),{490,308},15,1,WHITE);
             }
             
             DrawRectangleRounded(btnBack,0.1f,10,DARKGRAY);
-            DrawTextEx(mainFont,"< BACK",{510,558},16,1,WHITE);
+            DrawTextEx(mainFont,"< BACK",{510,558},15,1,WHITE);
         }
 
         //PANEL 3: CURRENT BUILD & BENCHMARK (Right Side)
@@ -205,13 +319,13 @@ int main(){
         DrawTextEx(mainFont,"Current Build",{890,80},24,1,textLight);
         
         DrawTextEx(mainFont,"CPU:",{865,150},16,1,SKYBLUE);
-        DrawTextEx(mainFont,selectedCPU,{865,175},20,1,WHITE);
+        DrawTextEx(mainFont,displayCPU.c_str(),{865,175},20,1,WHITE);
         
         DrawTextEx(mainFont,"GPU:",{865,235},16,1,GREEN);
-        DrawTextEx(mainFont,selectedGPU,{865,260},20,1,WHITE);
+        DrawTextEx(mainFont,displayGPU.c_str(),{865,260},20,1,WHITE);
         
         DrawTextEx(mainFont,"RAM:",{865,320},16,1,RED);
-        DrawTextEx(mainFont,selectedRAM,{865,345},20,1,WHITE);
+        DrawTextEx(mainFont,displayRAM.c_str(),{865,345},20,1,WHITE);
         
         DrawTextEx(mainFont,TextFormat("Total: $%i",currentCost),{865,450},24,1,moneyGreen);
         
@@ -221,9 +335,52 @@ int main(){
         DrawTextEx(mainFont,TextFormat("Shop Funds: $%i",shopFunds),{50,680},20,1,moneyGreen);
         DrawTextEx(mainFont,TextFormat("High Score: %i",highScore),{1000,680},20,1,ORANGE);
 
+        //Draw The Popup anim (Success)
+        if (popupTimer > 0.0f){
+            popupTimer -= GetFrameTime();
+            popupColor.a = (unsigned char)(255.0f * (popupTimer / 3.0f)); 
+            DrawTextEx(mainFont, popupText.c_str(), {865, 520}, 18, 1, popupColor);
+        }
+
+        //FULL SCREEN BSOD Draw
+        if (isBSOD){
+            bsodTimer -= GetFrameTime();
+            
+            // Draw pure blue over whole window
+            DrawRectangle(0,0,1280,720,bsodBlue);
+            
+            //The sad face and text
+            DrawTextEx(mainFont,":(",{150,100},120,1,WHITE);
+            DrawTextEx(mainFont,"Your Overclock was unstable and the PC crashed.",{150,280},28,1,WHITE);
+            DrawTextEx(mainFont,"The customer stormed out angry.",{150,330},24,1,LIGHTGRAY);
+            
+            //Score Breakdown
+            DrawTextEx(mainFont, TextFormat("Target Score Needed: %i", lastTargetScore), {150, 420}, 24, 1, WHITE);
+            DrawTextEx(mainFont, TextFormat("Your Achieved Score: %i", lastAchievedScore), {150, 460}, 24, 1, RED);
+            
+            //Penalty
+            DrawTextEx(mainFont,TextFormat("PENALTY: You lost $%i on ruined parts!",lastCostLost),{150,540},28,1,RED);
+            DrawTextEx(mainFont,"Rebooting shop...",{150,620},20,1,LIGHTGRAY);
+            
+            if (bsodTimer <= 0.0f) {
+                isBSOD = false; // Turn off BSOD after 4 seconds
+            }
+        }
+
         EndDrawing();
     }
+    
+    //Alis File Func
+    saveManager.saveGame(shopFunds, highScore);
+
+    //Free memory
+    for (int i = 0; i < shopCPUs.size(); i++) delete shopCPUs.get(i);
+    for (int i = 0; i < shopGPUs.size(); i++) delete shopGPUs.get(i);
+    for (int i = 0; i < shopRAMs.size(); i++) delete shopRAMs.get(i);
+
     UnloadFont(mainFont);
+    UnloadMusicStream(bgm);
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }
