@@ -128,8 +128,8 @@ int main(){
 
         //Generate customer if queue is empty
         if (!customerWaiting){
-            currentBudget = GetRandomValue(600,2500); 
-            targetScore = GetRandomValue(50,150); 
+            currentBudget = GetRandomValue(400,800);
+            targetScore = GetRandomValue(250,480);
             customerWaiting = true;
         }
 
@@ -208,7 +208,7 @@ int main(){
                             snakeFile.close();
                         }
                         
-                        int totalPerf = basePerf+(applesEaten/2);
+                        int totalPerf = basePerf+(applesEaten * 2);
                         
                         //Save stats for BSOD/Popup before resetting customer
                         lastAchievedScore = totalPerf;
@@ -255,6 +255,8 @@ int main(){
 
         BeginDrawing();
         ClearBackground(bgDark);
+        float dt = GetFrameTime();
+        if (dt>0.5f) dt=0.016f;
         
         //PANEL 1: CUSTOMER REQUEST (Left Side)
         DrawRectangleRounded({50,60,350,600},0.05f,10,panelColor);
@@ -337,30 +339,30 @@ int main(){
 
         //Draw The Popup anim (Success)
         if (popupTimer > 0.0f){
-            popupTimer -= GetFrameTime();
+            popupTimer -= dt;
             popupColor.a = (unsigned char)(255.0f * (popupTimer / 3.0f)); 
             DrawTextEx(mainFont, popupText.c_str(), {865, 520}, 18, 1, popupColor);
         }
 
         //FULL SCREEN BSOD Draw
         if (isBSOD){
-            bsodTimer -= GetFrameTime();
+            bsodTimer -= dt;
             
             // Draw pure blue over whole window
             DrawRectangle(0,0,1280,720,bsodBlue);
             
             //The sad face and text
-            DrawTextEx(mainFont,":(",{150,100},120,1,WHITE);
-            DrawTextEx(mainFont,"Your Overclock was unstable and the PC crashed.",{150,280},28,1,WHITE);
-            DrawTextEx(mainFont,"The customer stormed out angry.",{150,330},24,1,LIGHTGRAY);
+            DrawTextEx(mainFont,":(",{130,100},120,1,WHITE);
+            DrawTextEx(mainFont,"Your Overclock was unstable and the PC crashed.",{130,280},27,1,WHITE);
+            DrawTextEx(mainFont,"The customer stormed out angry.",{130,330},24,1,LIGHTGRAY);
             
             //Score Breakdown
-            DrawTextEx(mainFont, TextFormat("Target Score Needed: %i", lastTargetScore), {150, 420}, 24, 1, WHITE);
-            DrawTextEx(mainFont, TextFormat("Your Achieved Score: %i", lastAchievedScore), {150, 460}, 24, 1, RED);
+            DrawTextEx(mainFont, TextFormat("Target Score Needed: %i", lastTargetScore), {130, 420}, 24, 1, WHITE);
+            DrawTextEx(mainFont, TextFormat("Your Achieved Score: %i", lastAchievedScore), {130, 460}, 24, 1, RED);
             
             //Penalty
-            DrawTextEx(mainFont,TextFormat("PENALTY: You lost $%i on ruined parts!",lastCostLost),{150,540},28,1,RED);
-            DrawTextEx(mainFont,"Rebooting shop...",{150,620},20,1,LIGHTGRAY);
+            DrawTextEx(mainFont,TextFormat("PENALTY: You lost $%i on ruined parts!",lastCostLost),{130,540},28,1,RED);
+            DrawTextEx(mainFont,"Rebooting shop...",{130,620},20,1,LIGHTGRAY);
             
             if (bsodTimer <= 0.0f) {
                 isBSOD = false; // Turn off BSOD after 4 seconds
