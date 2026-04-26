@@ -6,6 +6,8 @@
 #include <ctype.h> //for tolower()
 #include <string.h> //for string compare
 
+int targetScore = 0;
+
 #define WIDTH 70
 #define HEIGHT 25
 #define MAX_LENGTH 500 //change later on
@@ -75,7 +77,9 @@ void draw(void){
         }
         printf("\n");
     }
-    printf("Player: %s\t Score: %d\t Previous High Score: %d\n",player_Name,score,highScore);
+    // printf("Player: %s\t Score: %d\t Previous High Score: %d\n",player_Name,score,highScore);
+    printf("Player: %s\t Previous High Score: %d\n", player_Name, highScore);
+    printf("TARGET OVERCLOCK: %d pts\t CURRENT OC: %d pts\n", targetScore, score * 2);
 }
 
 void MoveSnake(void){ 
@@ -127,7 +131,14 @@ void CheckFood(void){
     else if (score >= 300) Speed = 150;
 }
 int main(void)
-{
+{ //For Rig-Builder
+    targetScore = 0;
+    FILE *targetFile = fopen("snake_target.txt", "r");
+    if (targetFile != NULL) {
+        fscanf(targetFile, "%d", &targetScore);
+        fclose(targetFile);
+    }
+
     SetConsoleOutputCP(65001); //for font/visualization
     //Code taken from Stack Overflow to hide blinking cursor:
     CONSOLE_CURSOR_INFO cursorInfo;
