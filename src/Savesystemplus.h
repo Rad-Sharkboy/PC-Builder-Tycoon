@@ -1,10 +1,8 @@
-// ============================================================
 //  SAVE FILE FORMAT (save.txt):
 //    Line 1 — money
 //    Line 2 — highScore
-//    Line 3 — number of scores stored (0–10)
-//    Lines 4 to 13 — one past score per line (oldest → newest)
-// ============================================================
+//    Line 3 — number of scores stored (0–10) [History]
+
 #ifndef SAVESYSTEMPLUS_H
 #define SAVESYSTEMPLUS_H
 
