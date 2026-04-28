@@ -49,13 +49,13 @@ One of the most complex engineering feats of this project is how the C++ GUI com
 
 ## 📸 Screenshots
 
-![Main Shop UI](<img width="642" height="378" alt="shop_image" src="https://github.com/user-attachments/assets/22132f02-9409-4cf1-a5d0-43edb5f99b9d" />)
+![Main Shop UI](shop_image.png)
 > **The Shop Interface:** Manage customer budgets, assemble parts, and calculate your Base Score.
 
-![Snake Overclocking](<img width="825" height="713" alt="snake_image" src="https://github.com/user-attachments/assets/f4f3027c-832a-4445-9087-a5b499d3376f" />)
+![Snake Overclocking](snake_image.png)
 > **The Benchmark:** An integrated Snake game that reads the required Overclock points live.
 
-![Blue Screen of Death](<img width="611" height="358" alt="bsod_image" src="https://github.com/user-attachments/assets/f845f1b4-cd1e-470f-9fc2-444cf9d91e5f" />)
+![Blue Screen of Death](bsod_image.png)
 > **The BSOD Penalty:** Triggered by unstable builds, bottlenecks, or going over budget, causing the player to lose their invested hardware funds.
 
 ---
