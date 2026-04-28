@@ -5,6 +5,7 @@
 RigBuilder Tycoon is an interactive PC building simulation that strictly adheres to Object-Oriented Programming (OOP) principles. Moving beyond standard console applications, this project features a fully graphical shop interface where players take customer orders, assemble PCs under strict budgets, navigate hardware bottlenecks, and overclock their builds by completing a bridged C-based Snake mini-game.
 
 ## 🎓 Educational Purpose [Why we made this]
+
 **This game was built specifically for non-tech-savvy individuals.** For players who do not know much about computer hardware, this game serves as an interactive learning tool. By playing, users organically learn about:
 * **Component Relationships:** How CPUs, GPUs, and RAM interact to dictate total system performance.
 * **Hardware Compatibility:** The specific requirements of modern components (e.g., learning that a new Intel Core Ultra 9 requires DDR5 RAM, and cannot be slotted into an old DDR3 motherboard).
@@ -44,6 +45,7 @@ One of the most complex engineering feats of this project is how the C++ GUI com
 * **Strict Hardware Rules:** The game actively blocks incompatible hardware combinations. Custom UI popups will flash red, warning the user if they mix generations (e.g., DDR3 with DDR5) or if they forget to select all three components before benching.
 * **Bottleneck Penalties:** Combining bleeding-edge technology with a low-tier processor results in a massive 150-point mathematical penalty to the base score.
 * **Penalty States (BSOD):** Going over budget or failing an overclock triggers a timed, full-screen "Blue Screen of Death" (BSOD) penalty. The angry customer storms out, and the player permanently loses the money they invested in the ruined parts.
+* **Custom Multimedia Assets:** The GUI is fully customized using Raylib's audio and texture rendering capabilities. It features a custom window icon (`icon.ico`), continuous pixel-game style background music (`bgmusic.mp3`) handled by an independent audio stream (on a continuous loop), and a retro pixel-art font (`mainfont.ttf`) utilizing Point Filtering to ensure crisp text scaling without blurring.
 
 ---
 
