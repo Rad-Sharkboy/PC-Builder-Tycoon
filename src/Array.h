@@ -15,7 +15,6 @@ public:
     Array(){count=0;}
 
     /*
-      add(T item)
       Appends 'item' to the next available slot.
       Silently rejects the item if the array is already full
       and prints a warning in the console.
@@ -34,24 +33,17 @@ public:
     /*
       get(int index)
       Returns the item stored at 'index'.
-      Returns a default-constructed T and prints an error
-      if the index is out of bounds (defensive programming).
+      Returns a default-constructed T and prints an error if the index is out of bounds.
     */
     T get(int index) {
         if(index < 0 || index >= count) {
-            cout << "[Array] Index <" << index << "> is Out of Bounds!" << endl;
+            cout <<"[Array] Index <"<<index<<"> is Out of Bounds!"<<endl;
             return T();
         }
 
         return data[index];
     }
-
-    /*
-      size()
-      Returns how many items have been added so far.
-    */
-    int size() {
-        return count;
-    }
+    //Helper Function (extra)
+    int size() {return count;}
 };
 #endif

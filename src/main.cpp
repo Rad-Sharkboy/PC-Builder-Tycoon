@@ -11,37 +11,6 @@
 #include "PC.h" //Zain's Assembly Logic
 using namespace std;
 
-/* ~~~ RAYLIB SYNTAX FROM WEBSITE ~~~
-
-WINDOW & SETUP:
-WindowShouldClose()                   // Returns true if player clicks the X or hits ESC
-CloseWindow()                         // Safely closes the window and frees memory
-
-IMAGES & ICONS:
-LoadImage(const char *fileName)       // Loads an image file from your folder into RAM
-SetWindowIcon(Image image)            // Sets the icon in the top-left of the window
-UnloadImage(Image image)              // Deletes the image from RAM to save memory
-
-SHAPES & TEXT:
-DrawText(const char *text, int posX, int posY, int fontSize, Color color)
-
-DrawRectangleRounded(Rectangle rec, float roundness, int segments, Color color)
-  -> Rectangle rec = {x, y, width, height}
-  -> roundness = 0.0f (sharp edges) up to 1.0f (full circle)
-  -> segments = how smooth the curves are {10 is good for most cases}
-
-DrawRectangleRoundedLines(Rectangle rec, float roundness, int segments, float lineThick, Color color)
-  -> lineThick = how thick the border line is in pixels
-
-DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint)
-  -> position = {x, y}
-  -> spacing = space between letters
-
-CUSTOM COLORS:
-Color myColor = {R, G, B, Alpha} 
-  -> Red, Green, Blue, and Alpha (transparency). Values go 0-255.
-*/
-
 int main(){
     //Initialize the window
     SetConfigFlags(FLAG_WINDOW_TRANSPARENT); 
@@ -75,7 +44,7 @@ int main(){
     SaveSystemPlus saveManager; 
     saveManager.loadGame(shopFunds,highScore); 
     
-    //ZAIN'S HARDWARE SETUP USING ALIS TEMPLATE ARRAY
+    //ZAIN'S HARDWARE SETUP USING ALIS TEMPLATE ARRAY[To explain to sir]
     Array<CPU*> shopCPUs;
     shopCPUs.add(new CPU("Intel Core i3 (Old)",80,20));
     shopCPUs.add(new CPU("Intel Core i5",180,40));
@@ -97,8 +66,8 @@ int main(){
 
     int currentMenu = 0; 
 
-    //CURRENT BUILD VARIABLES
-    int selCPU_Idx = -1; //set to null
+    //Current Build/PC variables setup
+    int selCPU_Idx = -1;
     int selGPU_Idx = -1;
     int selRAM_Idx = -1;
     int currentCost=0;
@@ -111,12 +80,12 @@ int main(){
     Rectangle btnBench = {870,550,340,60}; 
     Rectangle btnBack = {475,540,300,50};
     
-    //ITEM HITBOXES
+    //Item Hitboxes
     Rectangle btnItem1 = {460,200,330,50};
     Rectangle btnItem2 = {460,290,330,50};
     Rectangle btnItem3 = {460,380,330,50};
 
-    //ANIMATION & BSOD VARIABLES
+    //Animation & BSOD Varaibles
     float popupTimer=0.0f;
     string popupText="";
     Color popupColor=WHITE;
@@ -129,7 +98,7 @@ int main(){
 
     while (!WindowShouldClose()){
         float dt=GetFrameTime();
-        if (dt>0.5f) dt=0.016f;//16ms = 60fps
+        if (dt>0.5f) dt=0.016f;
         
         UpdateMusicStream(bgm);
         Vector2 mousePos=GetMousePosition();
@@ -148,7 +117,7 @@ int main(){
         if (!isBSOD){
             if (currentMenu==0){
                 if (CheckCollisionPointRec(mousePos,btnCPU)){
-                    colorCPU = SKYBLUE; //Hover Effect
+                    colorCPU = SKYBLUE;
                     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) currentMenu=1;
                 }
                 if (CheckCollisionPointRec(mousePos,btnGPU)){
@@ -224,7 +193,7 @@ int main(){
                             isCompatible=false;
                         }
                         
-                        // If it fails the check, show red popup and cancel benchmark!
+                        //If it fails the check, show red popup and cancel benchmark
                         if (!isCompatible){
                             popupColor = RED;
                             popupTimer = 3.0f;
@@ -241,23 +210,24 @@ int main(){
                             
                             int basePerf = currentRig.calculateTotalPerformance();
                             
-                            //BOTTLENECK PENALTY
+                            //BOTTLENECK PENALTY[Customizable]
                             if (gpuName.find("5090")!=string::npos && cpuName.find("i3")!=string::npos){
-                                basePerf -= 50; //Huge penalty to base score
+                                basePerf -= 150; //Penalty/Loss base score's
                             }
                             
                             int scoreNeeded = targetScore-basePerf;
                             if (scoreNeeded<0) scoreNeeded=0; 
                             
+                            //Filing Explain to  Sir[Bridges gap b/w 2 programs data shareing]
                             ofstream targetOut("snake_target.txt");
-                            targetOut << scoreNeeded;
+                            targetOut<<scoreNeeded;
                             targetOut.close();
                             //Clear the file after save
                             ofstream clearBonus("snake_bonus.txt");
                             clearBonus << 0;
                             clearBonus.close();
                             
-                            system("start /wait Snake_Renewed.exe"); //Runs Snake_Game
+                            system("start /wait Snake_Renewed.exe");
                             
                             int applesEaten=0;
                             ifstream snakeFile("snake_bonus.txt");
@@ -265,7 +235,7 @@ int main(){
                                 snakeFile>>applesEaten;
                                 snakeFile.close();
                             }
-                            
+                            //Extra OC/erformance base score(apples of snake game)
                             int totalPerf = basePerf+(applesEaten * 2);
                             
                             lastAchievedScore = totalPerf;
@@ -274,9 +244,9 @@ int main(){
 
                             //Win Condition Check
                             if (totalPerf >= targetScore && currentCost <= currentBudget){
-                                int baseProfit = currentBudget - currentCost + 500;
+                                int baseProfit = currentBudget - currentCost+500;
                                 
-                                //BONUS MONEY
+                                //Bonus Money by extra base score
                                 int extraPoints = totalPerf-targetScore;
                                 int bonusMoney =0;
                                 
@@ -295,7 +265,7 @@ int main(){
                                 customerWaiting = false;
                                 selCPU_Idx = -1; selGPU_Idx = -1; selRAM_Idx = -1;
                                 
-                                //SUCCESS ANIMATION
+                                //Sucess/Money getting animation
                                 if (bonusMoney > 0){
                                     popupText = "+$" + to_string(totalProfit) + " ($" + to_string(bonusMoney) + " OC Bonus!)";
                                 } else {
@@ -305,8 +275,8 @@ int main(){
                                 popupTimer = 4.0f;
                             }
                             else{
-                                //BSOD!
-                                shopFunds -= currentCost; //You lose money spent on parts
+                                //BSOD
+                                shopFunds -= currentCost;
                                 saveManager.saveGame(shopFunds,highScore); //Save the new money
                                 
                                 customerWaiting=false; //Angry customer leaves
@@ -411,7 +381,7 @@ int main(){
         DrawTextEx(mainFont,TextFormat("Total Cost: $%i",currentCost),{865,420},20,1,moneyGreen);
         DrawTextEx(mainFont,TextFormat("Base Score: %i",currentBaseScore),{865,455},20,1,SKYBLUE);
         
-        if (customerWaiting && selCPU_Idx != -1 && selGPU_Idx != -1 && selRAM_Idx != -1){
+        if (customerWaiting && selCPU_Idx!=-1 && selGPU_Idx!=-1 && selRAM_Idx!=-1){
             int needed = targetScore-currentBaseScore;
             if (needed < 0) needed = 0;
             DrawTextEx(mainFont,TextFormat("OC Needed: %i pts", needed),{865,490},20,1, (needed>0)?ORANGE:GREEN);
@@ -422,10 +392,10 @@ int main(){
 
         DrawTextEx(mainFont,TextFormat("Shop Funds: $%i",shopFunds),{50,680},20,1,moneyGreen);
         DrawTextEx(mainFont,TextFormat("High Score: %i",highScore),{1000,680},20,1,ORANGE);
-        //Animation (.a =aplha 1.5s == 127(50% transparent))
+        //Animation (.a =aplha 1.5s == 127(50% transparent)) [For fade in/out animation]
         if (popupTimer > 0.0f){
             popupTimer -= dt;
-            popupColor.a = (unsigned char)(255.0f * (popupTimer / 3.0f)); 
+            popupColor.a = (unsigned char)(255.0f * (popupTimer/3.0f)); 
             DrawTextEx(mainFont, popupText.c_str(),{856,520},11,1,popupColor);
         }
 
@@ -435,22 +405,21 @@ int main(){
             DrawTextEx(mainFont,":(",{115,100},120,1,WHITE);
             DrawTextEx(mainFont,"Your Overclock was unstable and the PC crashed.",{115,280},26,1,WHITE);
             DrawTextEx(mainFont,"The customer stormed out angry.",{115,330},24,1,LIGHTGRAY);
-            DrawTextEx(mainFont, TextFormat("Target Score Needed: %i", lastTargetScore), {115, 420}, 24, 1, WHITE);
-            DrawTextEx(mainFont, TextFormat("Your Achieved Score: %i", lastAchievedScore), {115, 460}, 24, 1, RED);
+            DrawTextEx(mainFont, TextFormat("Target Score Needed: %i", lastTargetScore), {115,420},24,1,WHITE);
+            DrawTextEx(mainFont, TextFormat("Your Achieved Score: %i", lastAchievedScore), {115,460},24,1,RED);
             DrawTextEx(mainFont,TextFormat("PENALTY: You lost $%i on ruined parts!",lastCostLost),{115,540},28,1,RED);
             DrawTextEx(mainFont,"Rebooting shop...",{115,620},20,1,LIGHTGRAY);
             
-            if (bsodTimer <= 0.0f) isBSOD = false; 
+            if (bsodTimer <= 0.0f) isBSOD=false; 
         }
-
         EndDrawing();
     }
     
-    saveManager.saveGame(shopFunds, highScore);
+    saveManager.saveGame(shopFunds,highScore);
 
-    for (int i = 0; i < shopCPUs.size(); i++) delete shopCPUs.get(i);
-    for (int i = 0; i < shopGPUs.size(); i++) delete shopGPUs.get(i);
-    for (int i = 0; i < shopRAMs.size(); i++) delete shopRAMs.get(i);
+    for (int i=0; i<shopCPUs.size(); i++) delete shopCPUs.get(i);
+    for (int i=0; i<shopGPUs.size(); i++) delete shopGPUs.get(i);
+    for (int i=0; i<shopRAMs.size(); i++) delete shopRAMs.get(i);
 
     UnloadFont(mainFont);
     UnloadMusicStream(bgm);
