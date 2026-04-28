@@ -49,7 +49,7 @@ One of the most complex engineering feats of this project is how the C++ GUI com
 
 ## 📸 Screenshots
 
-![Main Shop UI](<img width="642" height="378" alt="shop_image" src="https://github.com/user-attachments/assets/1ab0bbb0-ea30-4643-8965-6fbb9b7ede64" />)
+![Main Shop UI](<img width="642" height="378" alt="shop_image" src="https://github.com/user-attachments/assets/22132f02-9409-4cf1-a5d0-43edb5f99b9d" />)
 > **The Shop Interface:** Manage customer budgets, assemble parts, and calculate your Base Score.
 
 ![Snake Overclocking](<img width="825" height="713" alt="snake_image" src="https://github.com/user-attachments/assets/f4f3027c-832a-4445-9087-a5b499d3376f" />)
