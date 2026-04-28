@@ -1,13 +1,15 @@
-//  SAVE FILE FORMAT (save.txt):
-//    Line 1 — money
-//    Line 2 — highScore
-//    Line 3 — number of scores stored (0–10) [History]
-
+/*  SAVE FILE FORMAT (gamedataplus.txt):
+    Line 1, money
+    Line 2, highScore
+    Line 3, number of scores stored (0-10)
+    Lines 4 to 13, one past score per line (oldest to newest)
+*/
 #ifndef SAVESYSTEMPLUS_H
 #define SAVESYSTEMPLUS_H
 
 #include <fstream>
 #include <iostream>
+using namespace std;
 
 const char SAVE_FILE_PLUS[]="gamedataplus.txt";
 const int  MAX_SCORES = 10;
@@ -20,13 +22,14 @@ class SaveSystemPlus{
     SaveSystemPlus()
     {
         scoreCount = 0;
-        for (int i = 0; i < MAX_SCORES; i++)
-            scoreHistory[i]=0;
+        for (int i = 0; i<MAX_SCORES; i++) scoreHistory[i]=0;
     }
 
 
-    //Pushes a new score into the history array.
-    //If 10 scores are already stored, the oldest one is dropped (everyone shifts left) to make room
+    /* 
+      Pushes a new score into the history array.
+      If 10 scores are already stored, the oldest one is dropped (everyone shifts left) to make room
+    */
     void addScore(int score){
         if (scoreCount<MAX_SCORES)
         {
@@ -35,10 +38,10 @@ class SaveSystemPlus{
         }
         else
         {
-            //Array is full — shift everything left (drop index 0)
+            //Array is full, shift everything left (drop index 0)
             for (int i = 0; i<MAX_SCORES-1; i++) scoreHistory[i] = scoreHistory[i+1];
 
-            //Place the new score at the end
+            //Place new score at the end
             scoreHistory[MAX_SCORES-1]=score;
         }
     }
@@ -47,7 +50,7 @@ class SaveSystemPlus{
     int getScoreCount() const {return scoreCount;}
 
 
-    //Writes money, highScore, AND the full score history to save.txt so nothing is lost between sessions.
+    //Writes money, highScore and the full score history to save.txt
     void saveGame(int money, int highScore){
         ofstream outFile(SAVE_FILE_PLUS);
         if (!outFile.is_open())
@@ -60,15 +63,16 @@ class SaveSystemPlus{
         outFile <<highScore<< "\n";
         outFile <<scoreCount<< "\n";
 
-        for (int i = 0; i<scoreCount; i++)
-            outFile <<scoreHistory[i]<<"\n";
+        for (int i = 0; i<scoreCount; i++) outFile<<scoreHistory[i]<< "\n";
         outFile.close();
-        cout <<"[SaveSystemPlus.h] Game saved successfully to "<<SAVE_FILE_PLUS<<".\n";
+        cout <<"[SaveSystemPlus.h] Game saved successfully to "<<SAVE_FILE_PLUS<< ".\n";
     }
 
 
-    //Reads money, highScore, AND rebuilds the score history from gamedataplus.txt into the internal array.
-    //[First-run safe: defaults if the file doesn't exist]
+    /*
+      Reads money,highScore and rebuilds the score history from gamedataplus.txt into the internal array.
+      [First-run safe: defaults if the file doesn't exist]
+    */
 
     void loadGame(int &money,int &highScore)
     {
@@ -76,7 +80,7 @@ class SaveSystemPlus{
         if (!inFile.is_open())
         {
             cout<<"[SaveSystemPlus.h] No save file found. Starting with default values.\n";
-            money = 1000; //Default Money is Customizable
+            money = 1000; //Default Money the shop starts with is Customizable
             highScore = 0;
             scoreCount = 0;
             return;
@@ -90,8 +94,7 @@ class SaveSystemPlus{
         if (scoreCount<0) scoreCount=0;
         if (scoreCount>MAX_SCORES) scoreCount=MAX_SCORES;
 
-        for (int i = 0; i<scoreCount; i++)
-            inFile >> scoreHistory[i];
+        for (int i = 0; i<scoreCount; i++) inFile>>scoreHistory[i];
 
         inFile.close();
         cout <<"[SaveSystemPlus.h] Save file loaded successfully.\n";

@@ -31,7 +31,6 @@ public:
     }
 
     /*
-      get(int index)
       Returns the item stored at 'index'.
       Returns a default-constructed T and prints an error if the index is out of bounds.
     */
