@@ -128,4 +128,4 @@ If you want to edit the game logic (for example, adding new components to the ar
 5. Launch the updated `.exe` to test your changes!
 
 ---
-*Developed by Faizan Talha, Muhammad Ali, and Muhammad Zain Salar.*
+*Developed by Me, Ali, and Zain Salar.*
